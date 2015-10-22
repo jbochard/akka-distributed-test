@@ -1,2 +1,1 @@
-# akka-distributed-test
-Prueba de servicio basado en actores Hakka
+Typesafe Activator template for distributed workers with Akka Cluster in Java.
