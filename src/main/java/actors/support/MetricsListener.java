@@ -64,8 +64,8 @@ public class MetricsListener extends UntypedActor {
 			log.info("Member is Removed: {}", mRemoved.member());
 
 		} else if (message instanceof MemberEvent) {
-			// ignore
-
+			MemberEvent mEvent = (MemberEvent) message;
+			log.info("Member Event: {}", mEvent.member());
 		} else {
 			unhandled(message);
 		}

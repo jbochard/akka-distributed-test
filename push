@@ -1,0 +1,6 @@
+#!/bin/bash
+
+git add .
+git commit -m "Modificación"
+git push origin master
+
