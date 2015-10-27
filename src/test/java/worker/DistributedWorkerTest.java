@@ -117,15 +117,13 @@ public class DistributedWorkerTest {
       new AwaitAssert(duration("10 seconds")) {
         protected void check() {
           frontend.tell(new Master.Work("1", 1), getRef());
-          expectMsgEquals(Frontend.Ok.getInstance());
-        }
+         }
       };
 
       assertEquals(results.expectMsgClass(Master.WorkResult.class).workId, "1");
 
       for (int n = 2; n <= 100; n += 1) {
         frontend.tell(new Master.Work(Integer.toString(n), n), getRef());
-        expectMsgEquals(Frontend.Ok.getInstance());
       }
 
       results.new Within(duration("10 seconds")) {

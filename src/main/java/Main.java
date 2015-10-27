@@ -1,5 +1,5 @@
 
-
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -22,14 +22,15 @@ import akka.dispatch.OnSuccess;
 import akka.pattern.Patterns;
 import akka.persistence.journal.leveldb.SharedLeveldbJournal;
 import akka.persistence.journal.leveldb.SharedLeveldbStore;
+import akka.routing.RandomPool;
 import akka.util.Timeout;
 import config.AkkaConfig;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
+import worker.EchoActor;
 import worker.Frontend;
 import worker.WorkExecutor;
-import worker.WorkProducer;
 import worker.WorkResultConsumer;
 import worker.Worker;
 
@@ -46,17 +47,39 @@ public class Main {
 		Config conf = ConfigFactory.load()
 				.withValue("akka.remote.netty.tcp", AkkaConfig.getTcpSection(port, clusterInfo))
 				.withValue("akka.cluster.seed-nodes", AkkaConfig.getSeedNodes(CLUSTER_NAME, port, clusterInfo));
-				//.withValue("akka.cluster.roles", ConfigValueFactory.fromAnyRef(Arrays.asList(CLUSTER_ROLE)));
+		// .withValue("akka.cluster.roles",
+		// ConfigValueFactory.fromAnyRef(Arrays.asList(CLUSTER_ROLE)));
 
 		ActorSystem system = ActorSystem.create(CLUSTER_NAME, conf);
 
-	    // Create an actor that handles cluster domain events
-	    system.actorOf(Props.create(MetricsListener.class), "metricsListener");
-	 		
-	    system.actorOf(Props.create(DeadLetterActor.class));
-	    
-	    // startupSharedJournal(system, (port == 2551), ActorPaths.fromString("akka.tcp://ClusterSystem@10.0.2.4:2551/user/store"));
-		// system.actorOf(ClusterSingletonManager.props(Master.props(workTimeout), PoisonPill.getInstance(), ClusterSingletonManagerSettings.create(system).withRole(role)), "master");
+		// Create an actor that handles cluster domain events
+		system.actorOf(Props.create(MetricsListener.class), "metricsListener");
+
+		system.actorOf(Props.create(DeadLetterActor.class), "deadLetterActor");
+
+		startEchoActor(system, clusterInfo, 5);
+
+		// startupSharedJournal(system, (port == 2551),
+		// ActorPaths.fromString("akka.tcp://ClusterSystem@10.0.2.4:2551/user/store"));
+		// system.actorOf(ClusterSingletonManager.props(Master.props(workTimeout),
+		// PoisonPill.getInstance(),
+		// ClusterSingletonManagerSettings.create(system).withRole(role)),
+		// "master");
+	}
+
+	private static void startEchoActor(ActorSystem system, Map<String, Object> clusterInfo, int num) {
+		ActorRef randomRouter = system.actorOf(Props.create(EchoActor.class).withRouter(new RandomPool(10)),
+				"RandomPoolActor");
+		for (int i = 0; i < num; i++) {
+			randomRouter.tell(((Map<String, Object>) clusterInfo.get("instanceInfo")).get("name").toString() + " "
+					+ String.valueOf(i), null);
+		}
+	}
+
+	private static void startFrontEnd(ActorSystem system, int num) {
+		for (int i = 0; i < num; i++) {
+			system.actorOf(Props.create(Frontend.class), "frontend-" + i);
+		}
 	}
 
 	public static void startWorker(int port) {
@@ -76,7 +99,6 @@ public class Main {
 
 		ActorSystem system = ActorSystem.create("ClusterSystem", conf);
 		ActorRef frontend = system.actorOf(Props.create(Frontend.class), "frontend");
-		system.actorOf(Props.create(WorkProducer.class, frontend), "producer");
 		system.actorOf(Props.create(WorkResultConsumer.class), "consumer");
 	}
 
