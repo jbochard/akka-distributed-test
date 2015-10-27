@@ -1,12 +1,10 @@
-package worker;
 
-import java.util.Arrays;
+
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
 
 import actors.support.DeadLetterActor;
 import actors.support.MetricsListener;
@@ -17,13 +15,10 @@ import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Identify;
 import akka.actor.Props;
-import akka.cluster.Cluster;
-import akka.cluster.ClusterEvent.ClusterDomainEvent;
 import akka.cluster.client.ClusterClient;
 import akka.cluster.client.ClusterClientSettings;
 import akka.dispatch.OnFailure;
 import akka.dispatch.OnSuccess;
-import akka.event.DeadLetterListener;
 import akka.pattern.Patterns;
 import akka.persistence.journal.leveldb.SharedLeveldbJournal;
 import akka.persistence.journal.leveldb.SharedLeveldbStore;
@@ -32,6 +27,11 @@ import config.AkkaConfig;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
+import worker.Frontend;
+import worker.WorkExecutor;
+import worker.WorkProducer;
+import worker.WorkResultConsumer;
+import worker.Worker;
 
 public class Main {
 	private static String CLUSTER_NAME = "ClusterSystem";
