@@ -1,5 +1,4 @@
 
-import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +21,7 @@ import akka.dispatch.OnSuccess;
 import akka.pattern.Patterns;
 import akka.persistence.journal.leveldb.SharedLeveldbJournal;
 import akka.persistence.journal.leveldb.SharedLeveldbStore;
-import akka.routing.RandomPool;
+import akka.routing.FromConfig;
 import akka.util.Timeout;
 import config.AkkaConfig;
 import scala.concurrent.Future;
@@ -57,7 +56,9 @@ public class Main {
 
 		system.actorOf(Props.create(DeadLetterActor.class), "deadLetterActor");
 
-		startEchoActor(system, clusterInfo, 5);
+		Thread.currentThread().sleep(10000);
+
+		startEchoActor(system, clusterInfo, 20);
 
 		// startupSharedJournal(system, (port == 2551),
 		// ActorPaths.fromString("akka.tcp://ClusterSystem@10.0.2.4:2551/user/store"));
@@ -67,9 +68,10 @@ public class Main {
 		// "master");
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void startEchoActor(ActorSystem system, Map<String, Object> clusterInfo, int num) {
-		ActorRef randomRouter = system.actorOf(Props.create(EchoActor.class).withRouter(new RandomPool(10)),
-				"RandomPoolActor");
+		ActorRef randomRouter = system.actorOf(Props.create(EchoActor.class).withRouter(new FromConfig()), "RandomPoolActor");
+
 		for (int i = 0; i < num; i++) {
 			randomRouter.tell(((Map<String, Object>) clusterInfo.get("instanceInfo")).get("name").toString() + " "
 					+ String.valueOf(i), null);

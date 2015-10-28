@@ -10,7 +10,8 @@ public class EchoActor extends UntypedActor {
 
 	@Override
 	public void onReceive(Object message) throws Exception {
-		log.info("Received Message {} in Actor {}", message.toString(), getSelf().path().address());
+		log.info("Received Message {} in Actor {}", message.toString(), getSelf().path().name());
+		Thread.currentThread().sleep(5000);
 	}
 
 }
